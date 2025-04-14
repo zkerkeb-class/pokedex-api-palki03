@@ -4,7 +4,7 @@ const pokemonSchema = new mongoose.Schema({
   id: {
     type: Number,
     required: true,
-    unique: true,
+    
   },
   name: {
     english: { type: String, required: true },
@@ -41,9 +41,13 @@ const pokemonSchema = new mongoose.Schema({
   evolutions: [{
     type: Number,
     ref: 'Pokemon'
+  }],
+  dresseur:[{
+    type: [String],
+    ref: 'Dresseur'
   }]
 }, {
-  collection: 'PokemonDB',
+  collection: 'Pokemondb',
   timestamps: true
 });
 
