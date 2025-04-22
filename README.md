@@ -1,75 +1,128 @@
-## Concepts à Comprendre
-1. REST API
-   - Méthodes HTTP (GET, POST, PUT, DELETE)
-   - Codes de statut HTTP
-   - Structure des URL
-   - CORS (Cross-Origin Resource Sharing)
+Projet de Alexandre Chanzy ing4 Cybergroup 1
+🧠 Structure du projet
 
-2. Express.js
-   - Routing
-   - Middleware
-   - Gestion des requêtes et réponses
-   - Configuration CORS
+📦 backend/
+ ┣ 📂model/            → Schémas Mongoose (`user.js`, `Pokemon.js`)
+ ┣ 📂routes/           → Routes Express (`pokemonroutes.js`, `userroute.js`)
+ ┣ 📂middleware/       → Middleware d'authentification JWT (`loginware.js`)
+ ┣ 📜db.js             → Connexion à la base de données MongoDB
+ ┣ 📜server.js         → Point d'entrée du serveur
 
-3. Sécurité de Base
-   - Validation des entrées
-   - Authentification
-   - Gestion des erreurs
-   - Politiques CORS
+⚙️ Installation
+   1. Prérequis
+   Node.js installé
+   Docker installé (pour la base MongoDB)
+   2. Lancer la base de données
+   docker run --name mongo-pokemon -p 27017:27017 -d mongo
+      git clone <url_backend&urlfrontend>
+      cd backend et cd frontend
+      npm install
+      npm run dev
 
-## Configuration CORS
-CORS (Cross-Origin Resource Sharing) est un mécanisme qui permet à de nombreuses ressources (polices, JavaScript, etc.) d'une page web d'être demandées à partir d'un autre domaine que celui du domaine d'origine.
+🔐 Authentification
+Toutes les routes (sauf /create et /login) sont protégées par token JWT via le middleware auth.
 
-Pour utiliser l'API depuis un autre domaine :
-1. L'API est configurée avec CORS activé
-2. Toutes les origines sont autorisées dans cette version de développement
-3. En production, vous devriez restreindre les origines autorisées
+Ajoutez ce header à vos requêtes :
+Authorization: Bearer <token>
 
-Pour une configuration plus restrictive, vous pouvez modifier les options CORS :
+📚 Routes API
 
-```javascript
-app.use(cors({
-  origin: 'https://votre-domaine.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-```
+🔑 Authentification
+   ✅ POST /create
+      Créer un utilisateur.
+         Body :
+         {
+            "email": "exemple@mail.com",
+            "password": "motdepasse"
+         }
 
-## Ressources Additionnelles
-- [Documentation Express.js](https://expressjs.com/fr/)
-- [Guide des Status HTTP](https://developer.mozilla.org/fr/docs/Web/HTTP/Status)
-- [REST API Best Practices](https://restfulapi.net/)
 
-## Support
-Pour toute question ou problème :
-1. Vérifiez la documentation
-2. Consultez les messages d'erreur dans la console
-3. Demandez de l'aide à votre formateur
+   ✅ POST /login
+      Connexion d’un utilisateur, retourne un token JWT.
 
-## Prochaines Étapes
-- Ajout d'une base de données (MongoDB)
-- Implémentation de tests automatisés
-- Déploiement de l'API
-- Documentation avec Swagger
+         Body :
+         {
+            "email": "exemple@mail.com",
+            "password": "motdepasse"
+         }
+         Réponse :
+         {
+            "message": "Connexion réussie",
+            "token": "<jwt_token>"
+         }
 
-## Gestion des Fichiers Statiques
-Le serveur expose le dossier `assets` pour servir les images des Pokémon. Les images sont accessibles via l'URL :
-```
-http://localhost:3000/assets/pokemons/{id}.png
-```
+📦 Pokémon
+Toutes les routes ci-dessous nécessitent un token JWT valide.
 
-Par exemple, pour accéder à l'image de Pikachu (ID: 25) :
-```
-http://localhost:3000/assets/pokemons/25.png
-```
+   🔍 GET /pokemons
+      Permet de lister les cartes Pokémon appartenant à l’utilisateur connecté, avec filtres :
+      searchname: nom à chercher (optionnel)
+      lang: langue pour le nom (french, english, etc.)
+      categorie: type de Pokémon (ex: Fire, Water...)
 
-### Configuration
-Le middleware `express.static` est utilisé pour servir les fichiers statiques :
-```javascript
-app.use('/assets', express.static(path.join(__dirname, '../assets')));
-```
+      Exemple : GET /pokemons?searchname=draco&lang=french&categorie=dragon
 
-### Sécurité
-- Seuls les fichiers du dossier `assets` sont exposés
-- Les autres dossiers du projet restent inaccessibles
-- En production, considérez l'utilisation d'un CDN pour les fichiers statiques
+   ➕ POST /pokemons
+      Créer une carte Pokémon :
+         Body :
+         {
+         "id": 150,
+         "name": "Mewtwo",
+         "type": ["Psychic"],
+         "base": {
+            "HP": 100,
+            "Attack": 150,
+            "Defense": 90,
+            "Sp": {
+               " Attack": 180,
+               " Defense": 120
+            }
+         }
+         }
+      💡 Le champ name sera automatiquement dupliqué dans toutes les langues.
+
+
+   ✏️ PUT /pokemons/:id/:lang
+      Met à jour les données d’un Pokémon (nom dans une langue donnée, stats, etc.).
+      Exemple : PUT /pokemons/150/french
+         Body :
+         {
+            "name": {
+               "french": "Mewtwo Modifié"
+            },
+            "base": {
+               "HP": 120
+            }
+         }
+
+   ❌ DELETE /pokemons/:id
+      Supprime une carte Pokémon de l’utilisateur.
+
+   🎁 BONUS : Transfert de cartes
+      🔁 POST /pokemons/giveCard
+      Permet de transférer une carte Pokémon à un autre utilisateur.
+
+         Body :
+         {
+            "email": "destinataire@mail.com",
+            "cardId": 150
+         }
+   
+
+✅ Exemple de réponse de succès
+   {
+      "message": "Carte transférée avec succès.",
+      "card": {
+         "id": 3,
+         "name": {
+            "english": "Bulbasaur",
+            "french": "Bulbizarre",
+            ...
+         },
+         "type": ["Grass", "Poison"],
+         "dresseur": ["nouveau@mail.com"]
+      }
+   }
+
+
+   

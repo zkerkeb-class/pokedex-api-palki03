@@ -5,9 +5,7 @@ dotenv.config();
 
 const auth = (req, res, next) => {
   const authHeader = req.header('Authorization');
-
   
-
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Accès refusé, token manquant ou mal formé' });
   }
