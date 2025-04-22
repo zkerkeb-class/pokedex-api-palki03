@@ -128,34 +128,40 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-
 router.put('/:id/:lang', auth, async (req, res) => {
   try {
-    
     const userEmail = req.user.email;
     console.log("Dresseur authentifié:", userEmail); 
-    console.log("reqparams.id",req.params.id);
-    
+    console.log("reqparams.id", req.params.id);
+
+    // Récupère tous les Pokémons
     const allPokemons = await Pokemon.find();
+
+    // Filtre les Pokémons du dresseur authentifié
     let filteredPokemons = allPokemons.filter(pokemon => pokemon.dresseur.includes(userEmail));
 
-    filteredPokemons=await Pokemon.findOne({ id: req.params.id });
-    console.log("pokemonajouté", filteredPokemons);
-    
-    if (!filteredPokemons) {
+    // Filtrer le Pokémon avec l'ID donné
+    const pokemonToUpdate = filteredPokemons.find(pokemon => pokemon.id === parseInt(req.params.id));
+
+    // Si le Pokémon n'est pas trouvé
+    if (!pokemonToUpdate) {
       return res.status(404).json({ message: "Pokémon non trouvé ou vous n'êtes pas autorisé à modifier ce Pokémon" });
     }
 
-    const updatedData = { ...filteredPokemons.toObject(), ...req.body };
+    console.log("Pokémon à mettre à jour:", pokemonToUpdate);
 
+    // Crée l'objet de données à mettre à jour
+    const updatedData = { ...pokemonToUpdate.toObject(), ...req.body };
 
+    // Si un nom est fourni et est un objet, on le met à jour
     if (req.body.name && typeof req.body.name === 'object') {
-      updatedData.name = {  
-        ...filteredPokemons.name?.toObject?.() || {},
+      updatedData.name = {
+        ...pokemonToUpdate.name?.toObject?.() || {},
         ...req.body.name
       };
     }
 
+    // Si la base contient des valeurs de Sp. Attack ou Sp. Defense, on les met à jour
     if (req.body.base && req.body.base.Sp) {
       if (req.body.base.Sp[' Attack'] !== undefined) {
         updatedData.base['Sp. Attack'] = req.body.base.Sp[' Attack'];
@@ -163,15 +169,17 @@ router.put('/:id/:lang', auth, async (req, res) => {
       if (req.body.base.Sp[' Defense'] !== undefined) {
         updatedData.base['Sp. Defense'] = req.body.base.Sp[' Defense'];
       }
-      delete updatedData.base.Sp;
+      delete updatedData.base.Sp;  // Supprime la clé Sp de l'objet base
     }
 
+    // Mise à jour du Pokémon dans la base de données
     const updatedPokemon = await Pokemon.findOneAndUpdate(
-      { _id: filteredPokemons._id },
+      { _id: pokemonToUpdate._id }, // Utilise _id de l'objet, pas du tableau
       updatedData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true } // Retourne le document mis à jour
     );
 
+    // Si la mise à jour réussie
     res.status(200).json(updatedPokemon);
 
   } catch (error) {
@@ -182,6 +190,7 @@ router.put('/:id/:lang', auth, async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -245,7 +254,6 @@ router.post('/giveCard', auth, async (req, res) => {
     let filteredPokemons = allPokemons.filter(pokemon =>
       pokemon.dresseur.includes(dresseurEmail)  
     );
-    
     filteredPokemons = filteredPokemons.filter(pokemon =>
       pokemon.id === parseInt(cardId)
     );
