@@ -197,21 +197,29 @@ router.put('/:id/:lang', auth, async (req, res) => {
 
 router.delete('/:id', auth, async (req, res) => {
   try {
+    const userEmail = req.user.email;
     console.log("delete");
-    const allPokemons = await Pokemon.find();
-    
-    const dresseurEmail = req.user.email;
-    let filteredPokemons = [...allPokemons];
-    console.log(dresseurEmail);
-    console.log(req.params.id);
-    filteredPokemons = filteredPokemons.filter(pokemon => 
-      pokemon.dresseur.includes(dresseurEmail));
-    filteredPokemons = await Pokemon.findOne({ id: req.params.id });
-    console.log(filteredPokemons._id);
-    await Pokemon.deleteOne({_id: filteredPokemons._id});
+    console.log("Dresseur authentifié:", userEmail); 
+    console.log("reqparams.id", req.params.id);
+    const allPokemonsdelete = await Pokemon.find();
+
+    // Filtre les Pokémons du dresseur authentifié
+    let filteredPokemons = allPokemonsdelete.filter(pokemon => pokemon.dresseur.includes(userEmail));
+
+    // Filtrer le Pokémon avec l'ID donné
+    const pokemonToUpdate = filteredPokemons.find(pokemon => pokemon.id === parseInt(req.params.id));
+
+    // Si le Pokémon n'est pas trouvé
+    if (!pokemonToUpdate) {
+      return res.status(404).json({ message: "Pokémon non trouvé ou vous n'êtes pas autorisé à modifier ce Pokémon" });
+    }
+
+    console.log("Pokémon à mettre à jour:", pokemonToUpdate);
+    console.log(pokemonToUpdate._id);
+    await Pokemon.deleteOne({_id: pokemonToUpdate._id});
     res.status(200).json({
       message: "Pokémon supprimé avec succès",
-      pokemon: filteredPokemons
+      pokemon: pokemonToUpdate
     });
 
   } catch (error) {
