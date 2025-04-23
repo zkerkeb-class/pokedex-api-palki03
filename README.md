@@ -1,5 +1,7 @@
 Projet de Alexandre Chanzy ing4 Cybergroup 1
 🧠 Structure du projet
+lien video youtube
+https://youtu.be/srvgj6NtER0
 
 📦 backend/
  ┣ 📂model/            → Schémas Mongoose (`user.js`, `Pokemon.js`)

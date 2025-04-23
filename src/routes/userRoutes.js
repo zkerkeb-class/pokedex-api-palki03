@@ -8,7 +8,7 @@ dotenv.config();
 
 const router = express.Router();
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body; // Utiliser req.body pour récupérer les données envoyées
+  const { email, password } = req.body; 
   console.log(req.body);
   
   if (!email || !password) {
@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
 
   try {
     console.log("Recherche de l'utilisateur avec l'email:", email);
-    const user = await User.findOne({ email, password }); // Recherche l'utilisateur avec l'email et le mot de passe
+    const user = await User.findOne({ email, password }); 
     
 
     if (!user) {
@@ -32,7 +32,6 @@ router.post('/login', async (req, res) => {
     console.log(process.env.JWT_SECRET);
     console.log(payload);
 
-    // Génération du token JWT
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -46,11 +45,6 @@ router.post('/login', async (req, res) => {
           email: user.email,
           token: token
         });
-
-        // Stocker le token côté client (côté front-end)
-        // C'est à toi de faire ça côté client (exemple en front-end)
-        // Exemple :
-        // localStorage.setItem('token', token);
       }
     );
    
